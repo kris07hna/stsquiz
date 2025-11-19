@@ -2,6 +2,9 @@ import { create } from 'zustand';
 
 const useQuizStore = create((set, get) => ({
   questions: [],
+  allQuestions: [], // Store all questions before filtering
+  filteredQuestions: [],
+  selectedTopics: [],
   currentQuestionIndex: 0,
   answers: {},
   answerDetails: {}, // Detailed answer tracking
@@ -20,14 +23,48 @@ const useQuizStore = create((set, get) => ({
   isRecapMode: false,
   recapQuestions: [],
 
-  setQuestions: (questions) => set({ 
-    questions,
-    currentQuestionIndex: 0,
-    answers: {},
-    wrongAnswers: [],
-    testCompleted: false,
-    showFeedback: false 
-  }),
+  setQuestions: (questions) => {
+    console.log('Loading questions:', questions.length);
+    const topics = [...new Set(questions.map(q => q.Topic || 'General'))];
+    console.log('Detected topics:', topics);
+    set({ 
+      questions,
+      allQuestions: questions,
+      filteredQuestions: questions,
+      selectedTopics: topics,
+      currentQuestionIndex: 0,
+      answers: {},
+      wrongAnswers: [],
+      testCompleted: false,
+      showFeedback: false 
+    });
+  },
+  
+  setSelectedTopics: (topics) => {
+    const { allQuestions, answers } = get();
+    console.log('Filtering topics:', topics);
+    console.log('Total questions before filter:', allQuestions.length);
+    
+    const filteredQuestions = topics.length === 0 
+      ? allQuestions
+      : allQuestions.filter(q => topics.includes(q.Topic || 'General'));
+    
+    console.log('Filtered questions count:', filteredQuestions.length);
+    
+    set({ 
+      selectedTopics: topics,
+      filteredQuestions,
+      questions: filteredQuestions,
+      currentQuestionIndex: 0,
+      showFeedback: false
+      // Keep answers - don't reset them
+    });
+  },
+  
+  getAvailableTopics: () => {
+    const { allQuestions } = get();
+    return [...new Set(allQuestions.map(q => q.Topic || 'General'))];
+  },
   
   setCurrentQuestion: (index) => set({ 
     currentQuestionIndex: index,

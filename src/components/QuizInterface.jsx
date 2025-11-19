@@ -6,6 +6,8 @@ import useQuizStore from '../store/quizStore';
 const QuizInterface = () => {
   const {
     questions,
+    allQuestions,
+    selectedTopics,
     currentQuestionIndex,
     answers,
     timeLeft,
@@ -15,6 +17,8 @@ const QuizInterface = () => {
     nextQuestion,
     previousQuestion,
     setTimeLeft,
+    setSelectedTopics,
+    getAvailableTopics,
     finishQuiz,
     getScore
   } = useQuizStore();
@@ -22,6 +26,16 @@ const QuizInterface = () => {
   const [flaggedQuestions, setFlaggedQuestions] = useState(new Set());
   const [showSolutions, setShowSolutions] = useState(false);
   const [currentTab, setCurrentTab] = useState('question');
+  const [showTopicFilter, setShowTopicFilter] = useState(false);
+  
+  const availableTopics = getAvailableTopics();
+  
+  const toggleTopic = (topic) => {
+    const newTopics = selectedTopics.includes(topic)
+      ? selectedTopics.filter(t => t !== topic)
+      : [...selectedTopics, topic];
+    setSelectedTopics(newTopics);
+  };
 
   useEffect(() => {
     let interval = null;
@@ -129,11 +143,42 @@ const QuizInterface = () => {
             testbook
           </div>
           <div style={{ fontSize: '14px', color: '#666' }}>
-            SBI PO 2015 - Live Test 303
+            Quiz Practice
+          </div>
+          <div style={{ 
+            fontSize: '12px', 
+            color: '#17a2b8',
+            fontWeight: '600',
+            background: '#e7f5ff',
+            padding: '4px 8px',
+            borderRadius: '4px'
+          }}>
+            {questions.length} of {allQuestions.length} questions
           </div>
         </div>
         
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+          <button
+            onClick={() => setShowTopicFilter(!showTopicFilter)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              background: showTopicFilter ? '#17a2b8' : '#f8f9fa',
+              color: showTopicFilter ? 'white' : '#666',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '13px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            <BarChart3 size={16} />
+            Topics ({selectedTopics.length}/{availableTopics.length})
+          </button>
+          
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -164,6 +209,110 @@ const QuizInterface = () => {
           </button>
         </div>
       </div>
+
+      {/* Topic Filter Panel */}
+      {showTopicFilter && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          style={{
+            background: 'white',
+            borderBottom: '2px solid #e0e0e0',
+            padding: '20px 24px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+          }}
+        >
+          <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '15px'
+            }}>
+              <h4 style={{ margin: 0, fontSize: '14px', color: '#333', fontWeight: '600' }}>
+                Filter Questions by Topic
+              </h4>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={() => setSelectedTopics(availableTopics)}
+                  style={{
+                    padding: '6px 12px',
+                    border: '1px solid #e0e0e0',
+                    background: 'white',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
+                >
+                  Select All
+                </button>
+                <button
+                  onClick={() => setSelectedTopics([])}
+                  style={{
+                    padding: '6px 12px',
+                    border: '1px solid #e0e0e0',
+                    background: 'white',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
+                >
+                  Clear All
+                </button>
+              </div>
+            </div>
+            
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '10px'
+            }}>
+              {availableTopics.map(topic => {
+                const isSelected = selectedTopics.includes(topic);
+                const topicCount = allQuestions.filter(q => (q.Topic || 'General') === topic).length;
+                
+                return (
+                  <button
+                    key={topic}
+                    onClick={() => toggleTopic(topic)}
+                    style={{
+                      padding: '8px 16px',
+                      border: `2px solid ${isSelected ? '#17a2b8' : '#e0e0e0'}`,
+                      background: isSelected ? '#e7f5ff' : 'white',
+                      color: isSelected ? '#17a2b8' : '#666',
+                      borderRadius: '20px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    {isSelected && <CheckCircle size={14} />}
+                    {topic} ({topicCount})
+                  </button>
+                );
+              })}
+            </div>
+            
+            <div style={{
+              marginTop: '15px',
+              padding: '10px',
+              background: '#f8f9fa',
+              borderRadius: '6px',
+              fontSize: '13px',
+              color: '#666'
+            }}>
+              <strong>{questions.length}</strong> questions selected out of <strong>{allQuestions.length}</strong> total
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       <div style={{ display: 'flex', maxWidth: '1400px', margin: '0 auto' }}>
         {/* Main Content Area */}
@@ -241,7 +390,7 @@ const QuizInterface = () => {
                   paddingBottom: '15px',
                   borderBottom: '1px solid #e0e0e0'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                     <span style={{
                       background: '#17a2b8',
                       color: 'white',
@@ -262,6 +411,18 @@ const QuizInterface = () => {
                     }}>
                       Marks: {currentQuestion.Marks || 1}
                     </span>
+                    {currentQuestion.Topic && (
+                      <span style={{
+                        background: '#6f42c1',
+                        color: 'white',
+                        padding: '4px 12px',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        fontWeight: '600'
+                      }}>
+                        📚 {currentQuestion.Topic}
+                      </span>
+                    )}
                   </div>
                   
                   <button

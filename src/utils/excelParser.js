@@ -38,6 +38,9 @@ const processQuizData = (data) => {
   const headers = data[0];
   const rows = data.slice(1);
   
+  console.log('Total rows in Excel (including header):', data.length);
+  console.log('Data rows to process:', rows.length);
+  
   // Map headers to indices (flexible header mapping)
   const headerMap = {};
   headers.forEach((header, index) => {
@@ -45,8 +48,16 @@ const processQuizData = (data) => {
     headerMap[cleanHeader] = index;
   });
   
+  console.log('Header mapping:', headerMap);
+  
+  let validQuestions = 0;
+  let invalidQuestions = 0;
+  
   const questions = rows.map((row, index) => {
-    if (!row || row.length === 0) return null;
+    // Skip completely empty rows
+    if (!row || row.every(cell => !cell || cell.toString().trim() === '')) {
+      return null;
+    }
     
     const question = {
       Question_ID: row[headerMap['Question_ID']] || `q_${index + 1}`,
@@ -61,13 +72,19 @@ const processQuizData = (data) => {
       Marks: parseInt(row[headerMap['Marks']]) || 1
     };
     
-    // Validate question
-    if (!question.Question_Text || (!question.choice_1 && !question.choice_2)) {
+    // Validate question - only require question text to be present
+    if (!question.Question_Text || question.Question_Text.trim() === '') {
+      invalidQuestions++;
       return null;
     }
     
+    validQuestions++;
     return question;
   }).filter(q => q !== null);
+  
+  console.log('Valid questions parsed:', validQuestions);
+  console.log('Invalid/empty rows skipped:', invalidQuestions);
+  console.log('Final questions array length:', questions.length);
   
   return questions;
 };
