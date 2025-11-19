@@ -1,0 +1,7 @@
+This is an "errero" file (placeholder).
+Created: 2025-11-19
+
+Use this file to log or reproduce errors when debugging the app.
+
+Example entry format:
+- [2025-11-19 10:00] Error loading XLSX: File not found
